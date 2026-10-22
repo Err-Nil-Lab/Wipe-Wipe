@@ -1,21 +1,41 @@
-// Menggambar satu jendela (latar luar + embun) dengan geseran horizontal offsetX.
+// Menggambar satu jendela (latar luar, monster, embun) dengan geseran horizontal offsetX.
 import type { KAPLAYCtx } from "kaplay";
 import { config } from "../config";
 import type { Fog } from "../logic/fog";
+import type { Monster } from "../logic/monster";
 
 const size = config.canvasSize;
 const cellPx = size / config.fog.gridSize;
 
-export function drawWindow(k: KAPLAYCtx, fog: Fog, windowIndex: number, offsetX: number) {
-  // Latar luar placeholder. Nama jendela ditulis supaya tiap jendela mudah dibedakan.
-  k.drawRect({ pos: k.vec2(offsetX, 0), width: size, height: size, color: k.rgb(25, 25, 25) });
+// Siluet placeholder: makin dekat makin besar dan makin turun (perspektif 2D).
+function drawMonster(k: KAPLAYCtx, monster: Monster, offsetX: number) {
+  const step = monster.step();
+  const height = 80 + (step - 1) * 120;
+  const width = height * 0.45;
+  const feetY = 400 + step * 48;
+  const centerX = offsetX + size / 2 + monster.xOffset * 200;
+  const black = k.rgb(0, 0, 0);
+
+  k.drawRect({ pos: k.vec2(centerX - width / 2, feetY - height * 0.65), width, height: height * 0.65, color: black });
+  const headY = feetY - height * 0.82;
+  k.drawCircle({ pos: k.vec2(centerX, headY), radius: height * 0.17, color: black });
+  for (const side of [-1, 1]) {
+    k.drawCircle({ pos: k.vec2(centerX + side * height * 0.06, headY), radius: height * 0.025, color: k.rgb(255, 255, 255) });
+  }
+}
+
+export function drawWindow(k: KAPLAYCtx, fog: Fog, windowIndex: number, offsetX: number, monster: Monster | null) {
+  // Latar luar placeholder. Nama jendela kecil di atas supaya tiap jendela mudah dibedakan.
+  k.drawRect({ pos: k.vec2(offsetX, 0), width: size, height: size, color: k.rgb(70, 70, 70) });
   k.drawText({
     text: config.windows[windowIndex].name,
-    pos: k.vec2(offsetX + size / 2, size / 2),
+    pos: k.vec2(offsetX + size / 2, 110),
     anchor: "center",
-    size: 120,
-    color: k.rgb(230, 230, 230),
+    size: 36,
+    color: k.rgb(110, 110, 110),
   });
+
+  if (monster) drawMonster(k, monster, offsetX);
 
   // Embun: satu kotak abu per sel, makin buram makin tidak transparan.
   // Batas kotak dibulatkan ke piksel utuh: tanpa celah dan tanpa tumpang tindih
