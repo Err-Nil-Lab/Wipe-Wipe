@@ -58,5 +58,10 @@ export function createRenderer(container: HTMLElement) {
     renderer.render(postScene, postCamera);
   }
 
-  return { renderer, render, canvas: renderer.domElement, aspect };
+  // Vignette mengetat saat menatap: 0 = normal, 1 = paling ketat.
+  function setStare(amount: number) {
+    postMaterial.uniforms.uVignette.value = post.vignette + amount * 0.3;
+  }
+
+  return { renderer, render, setStare, canvas: renderer.domElement, aspect };
 }

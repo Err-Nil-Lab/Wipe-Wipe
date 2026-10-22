@@ -37,6 +37,16 @@ export const config = {
     stationDistance: 1.3, // jarak kamera dari kaca saat berdiri di depan jendela
     travelBob: 0.035, // goyang naik-turun kepala saat berjalan pindah jendela (meter)
     travelRoll: 0.012, // miring kepala saat berjalan (radian)
+    monster: {
+      farDistance: 10, // jarak dari kaca saat langkah 1 (meter)
+      nearDistance: 0.1, // jarak dari kaca saat langkah di kaca (hampir menempel; tangan bertumpu di kaca)
+      farLateral: 2.0, // geser ke samping maksimum di langkah 1 (dikali xOffset acak)
+      nearLateral: 0.3, // geser ke samping di kaca (tetap terlihat lewat kaca)
+      fadeInSec: 0.8, // muncul dari kabut
+      fadeOutSec: 0.5, // menghilang ke kabut
+      lurchSec: 0.07, // seberapa cepat monster "melompat" maju satu langkah (makin kecil makin tersentak)
+      retreatSec: 0.3, // seberapa lambat monster mundur saat ditatap
+    },
     post: {
       levels: 14, // jumlah tingkat abu-abu setelah kuantisasi (makin kecil makin kasar)
       grain: 0.05, // kekuatan butiran film

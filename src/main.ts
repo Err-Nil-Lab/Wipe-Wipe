@@ -9,6 +9,7 @@ import { buildEnvironment } from "./view/environment";
 import { buildHouse } from "./view/house";
 import { glassPosition, windowYaw } from "./view/layout";
 import { createRenderer } from "./view/renderer";
+import { MonsterView } from "./view/monsterView";
 import { WindowGlass } from "./view/windowGlass";
 
 const gfx = createRenderer(document.getElementById("app")!);
@@ -19,9 +20,10 @@ const rig = createCameraRig(camera);
 const environment = buildEnvironment(scene);
 const { lantern } = buildHouse(scene);
 
-const night = new Night(0);
-// SEMENTARA (3D-1): monster belum punya tampilan 3D, jadi jangan dimunculkan.
-night.monsters.forEach((m) => (m.spawnIn = Infinity));
+// ?night=2 memilih malam (indeks mulai 1). Sementara, sampai alur menu dibuat di 3D-4.
+const nightIndex = Math.max(1, Math.min(config.nights.length, Number(new URLSearchParams(location.search).get("night")) || 1)) - 1;
+const night = new Night(nightIndex);
+const monsterViews = night.monsters.map(() => new MonsterView(scene));
 
 // Satu kaca per jendela; semuanya diperbarui tiap frame, hanya yang di depan kamera yang bisa diusap.
 const glasses = night.fogs.map((fog, i) => {
@@ -39,6 +41,8 @@ const hud = document.getElementById("hud")!;
 const raycaster = new THREE.Raycaster();
 let pointer: { x: number; y: number } | null = null; // posisi kursor dalam piksel layar
 let overUi = false; // kursor di atas minimap: wipe mati
+let holding = false; // klik kiri ditahan = menatap (stare); wipe mati selama ditahan
+let stareAmount = 0; // 0..1 dihaluskan, untuk efek kamera saat menatap
 let lastCell: { x: number; y: number } | null = null;
 
 window.addEventListener("pointermove", (e) => {
@@ -46,6 +50,13 @@ window.addEventListener("pointermove", (e) => {
   overUi = (e.target as HTMLElement).closest("#minimap") !== null;
 });
 document.addEventListener("pointerleave", () => (pointer = null));
+window.addEventListener("pointerdown", (e) => {
+  if (e.button === 0) holding = true;
+});
+window.addEventListener("pointerup", (e) => {
+  if (e.button === 0) holding = false;
+});
+window.addEventListener("blur", () => (holding = false));
 
 // Kursor -> sel di kaca aktif -> usap. Cincin menunjukkan ukuran kuas di layar.
 function wipeUnderPointer() {
@@ -53,7 +64,7 @@ function wipeUnderPointer() {
   const rect = gfx.canvas.getBoundingClientRect();
   const inside = pointer && pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom;
   let hit: ReturnType<WindowGlass["pick"]> = null;
-  if (fog && inside && !overUi) {
+  if (fog && inside && !overUi && !holding) {
     const ndc = new THREE.Vector2(((pointer!.x - rect.left) / rect.width) * 2 - 1, -(((pointer!.y - rect.top) / rect.height) * 2 - 1));
     raycaster.setFromCamera(ndc, camera);
     hit = glasses[night.current].pick(raycaster);
@@ -88,8 +99,16 @@ function frame(now: number) {
   last = now;
   fps += (1 / Math.max(dt, 0.0001) - fps) * 0.05;
 
-  night.update(dt, false);
+  night.update(dt, holding && !overUi); // klik di minimap = pindah, bukan menatap
+  monsterViews.forEach((view, i) => view.update(dt, now / 1000, night.monsters[i], night.staredMonster === night.monsters[i]));
   rig.update(night, now / 1000);
+
+  // Menatap: sudut pandang menyempit sedikit dan vignette mengetat.
+  stareAmount += ((night.stareStatus === "staring" ? 1 : 0) - stareAmount) * Math.min(1, dt * 8);
+  camera.fov = config.view3d.fov - 6 * stareAmount;
+  camera.updateProjectionMatrix();
+  gfx.setStare(stareAmount);
+
   camera.updateMatrixWorld();
   wipeUnderPointer();
   glasses.forEach((g) => g.update());
@@ -104,11 +123,15 @@ function frame(now: number) {
     hudTimer = 0;
     const info = gfx.renderer.info.render;
     const fogText = night.fogs.map((f, i) => `${config.windows[i].name} ${(f.fogRatio() * 100).toFixed(0)}%`).join("  ");
-    hud.textContent = `FPS ${fps.toFixed(0)}   embun: ${fogText}\ndraw call ${info.calls}   segitiga ${info.triangles}`;
+    const monsterText = night.monsters
+      .map((m, i) => (m.window === null ? `M${i + 1}: tunggu ${Math.max(0, m.spawnIn).toFixed(1)}s` : `M${i + 1}: ${config.windows[m.window].name} langkah ${m.step()} (${m.position.toFixed(2)}) menempel ${m.graceElapsed.toFixed(1)}s`))
+      .join("   ");
+    const state = night.isLost() ? "KALAH (jumpscare 3D di 3D-4)" : `stare: ${night.stareStatus}`;
+    hud.textContent = `FPS ${fps.toFixed(0)}   embun: ${fogText}\n${monsterText}   ${state}\ndraw call ${info.calls}   segitiga ${info.triangles}`;
   }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 
 // Untuk tes otomatis.
-(window as unknown as { __game: unknown }).__game = { night, camera, scene, THREE };
+(window as unknown as { __game: unknown }).__game = { night, camera, scene, THREE, monsterViews };

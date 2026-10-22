@@ -15,6 +15,7 @@ export class Night {
   current: number = config.startWindow; // jendela yang sedang dilihat (atau asal saat pindah)
   travel: Travel | null = null;
   stareStatus: StareStatus = "none";
+  staredMonster: Monster | null = null; // monster yang sedang ditatap (untuk tampilan)
   elapsed = 0; // detik sejak malam mulai
   lostBy: Monster | null = null; // monster yang berhasil masuk; null = belum kalah
   private won = false;
@@ -75,6 +76,7 @@ export class Night {
   // Menentukan monster mana yang sedang ditatap (kalau ada) dan mengisi stareStatus.
   private updateStare(holdingStare: boolean): Monster | null {
     this.stareStatus = "none";
+    this.staredMonster = null;
     if (!holdingStare || this.travel) return null;
     if (this.fogs[this.current].fogRatio() >= config.fog.stareMaxFog) {
       this.stareStatus = "foggy";
@@ -82,6 +84,7 @@ export class Night {
     }
     const target = this.monsterAt(this.current);
     if (target) this.stareStatus = "staring";
+    this.staredMonster = target;
     return target;
   }
 
