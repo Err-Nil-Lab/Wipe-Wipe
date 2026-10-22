@@ -34,6 +34,8 @@ export const config = {
     margin: 14, // jarak dari pojok kanan bawah
   },
 
+  replayMonologueOnRetry: true, // kalah lalu ulang: monolog malam itu diputar lagi (false = langsung main)
+
   nightLengthSec: 300, // jam 00:00 sampai 05:00 -> 1 jam game = 1 menit
 
   jumpscare: {

@@ -2,6 +2,7 @@
 import type { KAPLAYCtx } from "kaplay";
 import { config } from "../config";
 import { Night } from "../logic/night";
+import { saveHighestNight } from "../logic/progress";
 import { drawWindow } from "../render/window";
 import { drawClock } from "../render/hud";
 import { drawMinimap, isOverMinimap, windowAtPoint } from "../render/minimap";
@@ -12,6 +13,7 @@ export function registerGameScene(k: KAPLAYCtx) {
     const cellPx = config.canvasSize / config.fog.gridSize;
     let lastCell: { x: number; y: number } | null = null;
     let fps = 60;
+    let progressSaved = false;
 
     k.onUpdate(() => {
       const dt = k.dt();
@@ -21,6 +23,11 @@ export function registerGameScene(k: KAPLAYCtx) {
       const overMinimap = isOverMinimap(mouse);
       const holding = k.isMouseDown("left") && !overMinimap; // klik di minimap = pindah, bukan stare
       night.update(dt, holding);
+      if (night.isWon() && !progressSaved) {
+        // Simpan saat menang (bukan saat klik) supaya refresh di layar menang tidak menghilangkan progres.
+        saveHighestNight(Math.min(nightIndex + 1, config.nights.length - 1));
+        progressSaved = true;
+      }
       if (night.lostBy) k.go("jumpscare", nightIndex, night.lostBy.xOffset);
 
       // Wipe: hover tanpa klik. Mati saat klik ditahan (stare), saat pindah, dan di minimap.
@@ -38,14 +45,16 @@ export function registerGameScene(k: KAPLAYCtx) {
 
     k.onMousePress("left", () => {
       if (night.isWon()) {
-        k.go("game", Math.min(nightIndex + 1, config.nights.length - 1)); // sementara: alur lengkap di M4
+        const isLastNight = nightIndex === config.nights.length - 1;
+        if (isLastNight) k.go("end");
+        else k.go("monologue", nightIndex + 1);
         return;
       }
       const target = windowAtPoint(k.mousePos());
       if (target !== null) night.startTravel(target);
     });
 
-    // Sementara untuk tes: loncat ke malam 1-3. Panel debug lengkap di M6.
+    // Sementara untuk tes: loncat langsung ke game malam 1-3 (tanpa monolog). Panel debug lengkap di M6.
     config.nights.forEach((_, i) => k.onKeyPress(String(i + 1), () => k.go("game", i)));
 
     k.onDraw(() => {
@@ -66,10 +75,9 @@ export function registerGameScene(k: KAPLAYCtx) {
       drawClock(k, nightIndex, night.clockText());
 
       if (night.isWon()) {
-        // Sementara: layar menang sederhana. Alur lengkap di M4.
         k.drawRect({ pos: k.vec2(0, 0), width: config.canvasSize, height: config.canvasSize, color: k.rgb(255, 255, 255), opacity: 0.85 });
         k.drawText({ text: "05:00  PAGI", pos: k.vec2(360, 330), anchor: "center", size: 64, color: k.rgb(0, 0, 0) });
-        k.drawText({ text: "Klik untuk malam berikutnya", pos: k.vec2(360, 400), anchor: "center", size: 20, color: k.rgb(0, 0, 0) });
+        k.drawText({ text: nightIndex === config.nights.length - 1 ? "Klik untuk lanjut" : "Klik untuk malam berikutnya", pos: k.vec2(360, 400), anchor: "center", size: 20, color: k.rgb(0, 0, 0) });
       }
     });
 

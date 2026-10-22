@@ -16,7 +16,7 @@ export function registerJumpscareScene(k: KAPLAYCtx) {
       t += k.dt();
     });
     k.onKeyPress("r", () => {
-      if (t >= lostScreenAt) k.go("game", nightIndex); // sementara: alur lengkap di M4
+      if (t >= lostScreenAt) k.go(config.replayMonologueOnRetry ? "monologue" : "game", nightIndex);
     });
 
     k.onDraw(() => {

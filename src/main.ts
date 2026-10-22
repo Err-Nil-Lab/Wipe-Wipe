@@ -1,7 +1,10 @@
 import kaplay from "kaplay";
 import { config } from "./config";
+import { registerEndScene } from "./scenes/end";
 import { registerGameScene } from "./scenes/game";
 import { registerJumpscareScene } from "./scenes/jumpscare";
+import { registerMenuScene } from "./scenes/menu";
+import { registerMonologueScene } from "./scenes/monologue";
 
 const k = kaplay({
   width: config.canvasSize,
@@ -11,6 +14,11 @@ const k = kaplay({
   global: false,
 });
 
+
+
+registerMenuScene(k);
+registerMonologueScene(k);
 registerGameScene(k);
 registerJumpscareScene(k);
-k.go("game");
+registerEndScene(k);
+k.go("menu");
