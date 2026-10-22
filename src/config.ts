@@ -32,6 +32,7 @@ export const config = {
     fov: 60, // sudut pandang vertikal kamera (derajat)
     glassSize: 1.2, // sisi kaca persegi
     windowCenterY: 1.6, // tinggi tengah jendela
+    fogDensity: 0.05, // kepekatan kabut luar (FogExp2); makin besar makin cepat pemandangan memudar
     eyeHeight: 1.6, // tinggi mata kamera
     stationDistance: 1.3, // jarak kamera dari kaca saat berdiri di depan jendela
     travelBob: 0.035, // goyang naik-turun kepala saat berjalan pindah jendela (meter)

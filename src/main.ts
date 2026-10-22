@@ -13,10 +13,10 @@ import { WindowGlass } from "./view/windowGlass";
 
 const gfx = createRenderer(document.getElementById("app")!);
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(config.view3d.fov, 16 / 9, 0.05, 80);
+const camera = new THREE.PerspectiveCamera(config.view3d.fov, 16 / 9, 0.05, 130);
 const rig = createCameraRig(camera);
 
-buildEnvironment(scene);
+const environment = buildEnvironment(scene);
 const { lantern } = buildHouse(scene);
 
 const night = new Night(0);
@@ -94,6 +94,7 @@ function frame(now: number) {
   wipeUnderPointer();
   glasses.forEach((g) => g.update());
   minimap.highlight(night.travel ? night.travel.to : night.current);
+  environment.update(now / 1000);
   lantern.intensity = 12 + Math.sin(now / 130) * 0.6 + Math.sin(now / 47) * 0.4; // kedip pelan
 
   gfx.render(scene, camera, now / 1000);
@@ -110,4 +111,4 @@ function frame(now: number) {
 requestAnimationFrame(frame);
 
 // Untuk tes otomatis.
-(window as unknown as { __game: unknown }).__game = { night, camera };
+(window as unknown as { __game: unknown }).__game = { night, camera, scene, THREE };
