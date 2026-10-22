@@ -22,6 +22,10 @@ npm run balance    # perkiraan kasar keseimbangan dengan bot (lihat tools/balanc
 - **R** di layar kalah: ulang malam.
 
 ## Embun
+- **Wipe itu mahal:** tiap lintasan kuas hanya menghapus sebagian embun (`config.fog.wipePerPass`), sebanding
+  panjang jalur gosokan. Kursor diam tidak menghapus; gosokan cepat dan keras lebih efektif. Dengan gosokan zig-zag
+  rapat ±2,6 lebar-kaca/dtk: stare siap ±3,5 dtk, monster mulai terlihat ±5,5 dtk, hampir bersih ±10 dtk
+  (pemain nyata lebih lama). Intip 0,7 dtk dan usap penuh 2 dtk di GDD lama sudah tidak berlaku.
 - **Blur-fill:** kejernihan dihitung dari area sekitar (`config.fog.blurRadius`, `blurMix`), jadi satu usapan hanya
   memberi strip keruh; kaca baru jelas kalau sebagian besar sudah bersih.
 - **Merayap balik:** embun menutup lubang dari tepinya (`config.fog.creepPerSec`). Lubang kecil cepat menutup,

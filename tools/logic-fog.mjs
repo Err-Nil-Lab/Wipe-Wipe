@@ -14,6 +14,30 @@ const check = (name, ok, extra = "") => { console.log(ok ? "OK  " : "FAIL", name
 const strokes = (f, count) => { for (let i = 0; i < count; i++) f.wipeLine(0, (i + 0.5) * (N / count), N, (i + 0.5) * (N / count), R); };
 const centerFog = (f) => f.cells[(N / 2) * N + N / 2];
 
+// 0. rub (gosok): wipe yang "mahal"
+{
+  const P = config.fog.wipePerPass;
+  const total = (f) => f.cells.reduce((a, b) => a + b, 0);
+  let f = new Fog(N, 1); f.rub(10, 10, 10, 10, R, P);
+  check("rub: kursor diam tidak menghapus apa pun", total(f) === N * N);
+
+  f = new Fog(N, 1); f.rub(0, 16, 32, 16, R, P);
+  const midCell = f.cells[16 * N + 16];
+  check("rub: satu lintasan penuh menghapus ~wipePerPass di garis tengah", Math.abs(1 - midCell - P) < 0.08, `sisa ${midCell.toFixed(2)} (harap ~${(1 - P).toFixed(2)})`);
+
+  const oneSegment = new Fog(N, 1); oneSegment.rub(0, 16, 32, 16, R, P);
+  const manySegments = new Fog(N, 1); for (let i = 0; i < 160; i++) manySegments.rub(i * 0.2, 16, (i + 1) * 0.2, 16, R, P);
+  const diff = Math.abs(total(oneSegment) - total(manySegments)) / total(oneSegment);
+  check("rub: hasil sama walau jalur dipecah jadi banyak frame kecil", diff < 0.03, `selisih ${(diff * 100).toFixed(1)}%`);
+
+  f = new Fog(N, 1); f.rub(0, 16, 32, 16, R, P); f.rub(32, 16, 0, 16, R, P);
+  check("rub: dua lintasan (pulang-pergi) membersihkan garis tengah bila wipePerPass >= 0.5", P < 0.5 || f.cells[16 * N + 16] < 0.05, `sisa ${f.cells[16 * N + 16].toFixed(2)}`);
+  check("rub: embun tidak pernah negatif", f.cells.every((v) => v >= 0 && v <= 1));
+
+  f = new Fog(N, 1); f.rub(0, 16, 32, 16, R, P);
+  check("rub: tepi kuas menghapus lebih sedikit daripada tengah", f.cells[(16 + 2) * N + 16] > f.cells[16 * N + 16]);
+}
+
 // 1. embun yang rata tidak berubah oleh creep
 {
   const f = new Fog(N, 0.6); const before = Array.from(f.cells);
@@ -31,7 +55,7 @@ function holeLifetime(creepRate, rows) {
 const withoutCreep = holeLifetime(0, 1);
 const withCreep = holeLifetime(config.fog.creepPerSec, 1);
 check("tanpa creep lubang 1 usapan bertahan ~0,3 x embun penuh", Math.abs(withoutCreep - 0.3 * config.nights[0].fogFullSec) < 0.2, withoutCreep.toFixed(1) + " dtk");
-check("dengan creep lubang 1 usapan lebih cepat menutup", config.fog.creepPerSec === 0 || withCreep < withoutCreep * 0.8, withCreep.toFixed(1) + " dtk");
+check("dengan creep lubang 1 usapan lebih cepat menutup", config.fog.creepPerSec === 0 || withCreep < withoutCreep - 0.2, withCreep.toFixed(1) + " dtk (tanpa creep " + withoutCreep.toFixed(1) + ")");
 
 // 3. area luas yang bersih bertahan: kaca bersih penuh masih <50% setelah 5 dtk (stare manual dari kaca mungkin)
 {

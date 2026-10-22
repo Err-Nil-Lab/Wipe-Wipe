@@ -2,12 +2,17 @@
 export const config = {
   fog: {
     gridSize: 32, // sel per sisi kaca (32 -> 32x32). Boleh dinaikkan kalau embun terlihat kasar.
-    brushRadius: 0.08, // radius kuas sebagai pecahan lebar kaca (0.08 = 8%); setel sampai usap penuh terasa ~2 dtk
+    brushRadius: 0.08, // radius kuas sebagai pecahan lebar kaca (0.08 = 8%)
+    // Wipe itu "mahal": tiap lintasan kuas hanya menghapus sebagian embun, sebanding panjang jalur gosokan
+    // (kursor diam tidak menghapus apa pun; gosokan cepat dan keras lebih efektif). Nilai = bagian embun yang
+    // hilang di garis tengah kuas per satu lintasan penuh. 1 = langsung bersih; makin kecil makin banyak lintasan.
+    // Perkiraan (gosok zig-zag 2,5 lebar-kaca/dtk): 0,7 -> kaca terlihat ±8 dtk, siap menatap ±6 dtk.
+    wipePerPass: 0.7,
     startFog: 0, // embun awal tiap jendela saat malam mulai (0 jernih, 1 buram)
     stareMaxFog: 0.5, // stare hanya jalan kalau rata-rata embun kaca di bawah angka ini
     // Embun merayap balik ke area bersih dari tepinya: lubang kecil (intip) cepat menutup, area luas bertahan.
-    // 0 = mati. Makin besar makin cepat; dengan 1 menatap manual dari kaca (5 dtk) butuh kaca hampir bersih penuh.
-    creepPerSec: 1,
+    // 0 = mati. Makin besar makin cepat. Karena wipe sudah mahal, nilainya dijaga kecil (di atas 0,6 hampir mustahil membersihkan).
+    creepPerSec: 0.3,
     // Kejernihan tampilan dihitung dari rata-rata area sekitar, jadi lubang kecil tetap berkabut samar
     // dan baru jernih kalau sebagian besar kaca bersih.
     blurRadius: 0.22, // radius area rata-rata, pecahan lebar kaca

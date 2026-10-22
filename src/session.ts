@@ -93,7 +93,7 @@ export class NightSession {
     }
 
     const from = this.lastCell ?? hit;
-    fog.wipeLine(from.x, from.y, hit.x, hit.y, config.fog.brushRadius * fog.size);
+    fog.rub(from.x, from.y, hit.x, hit.y, config.fog.brushRadius * fog.size, config.fog.wipePerPass);
     this.lastCell = hit;
 
     // Radius cincin: proyeksikan titik di samping kursor sejauh radius kuas (meter) ke layar.

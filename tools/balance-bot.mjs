@@ -18,10 +18,15 @@ const RUNS = Number(process.argv[2]) || 60;
 if (process.argv[3]) config.monster.approachPerSec = 1 / Number(process.argv[3]);
 if (process.argv[4]) config.monster.respawnSec = process.argv[4].split(",").map(Number);
 const VARIANTS = [
-  { name: "teliti   (intip 0.7s, bereaksi 0.6s, usap penuh 2s)", peekSec: 0.7, reactSec: 0.6, wipeFullSec: 2 },
-  { name: "rata-rata (intip 1.2s, bereaksi 1.2s, usap penuh 2.5s)", peekSec: 1.2, reactSec: 1.2, wipeFullSec: 2.5 },
-  { name: "lambat   (intip 2.0s, bereaksi 2.5s, usap penuh 3.5s)", peekSec: 2.0, reactSec: 2.5, wipeFullSec: 3.5 },
+  { name: "teliti    (lihat monster 5s, siap tatap 5s, bereaksi 0.6s)", identifySec: 5, wipeToStareSec: 5, reactSec: 0.6 },
+  { name: "rata-rata (lihat monster 8s, siap tatap 7s, bereaksi 1.2s)", identifySec: 8, wipeToStareSec: 7, reactSec: 1.2 },
+  { name: "lambat    (lihat monster 12s, siap tatap 10s, bereaksi 2.5s)", identifySec: 12, wipeToStareSec: 10, reactSec: 2.5 },
 ];
+
+// Menggosok mengurangi embun merata: dari 100% ke 35% butuh wipeToStareSec.
+function scrub(fog, v) {
+  for (let i = 0; i < fog.cells.length; i++) fog.cells[i] = Math.max(0, fog.cells[i] - (DT * 0.65) / v.wipeToStareSec);
+}
 
 function play(nightIndex, v) {
   const n = new Night(nightIndex);
@@ -38,6 +43,7 @@ function play(nightIndex, v) {
       const here = n.monsterAt(n.current);
       const knocking = n.monsters.find((m) => m.window !== null && m.window !== n.current && m.position >= config.monster.glassStep);
 
+      if (!here) sawMonster = false; // monster sudah pergi (atau memang tidak ada): cari lagi
       if (knocking) knockHeardFor += DT;
       else knockHeardFor = 0;
 
@@ -45,13 +51,13 @@ function play(nightIndex, v) {
         n.startTravel(knocking.window);
         atWindow = 0;
         sawMonster = false;
+      } else if (!sawMonster && atWindow < v.identifySec * fog.fogRatio()) {
+        scrub(fog, v); // masih menggosok untuk melihat isi jendela
       } else if (here) {
-        if (atWindow >= v.peekSec) sawMonster = true;
-        if (sawMonster) {
-          if (fog.fogRatio() >= 0.35) for (let i = 0; i < fog.cells.length; i++) fog.cells[i] = Math.max(0, fog.cells[i] - DT / v.wipeFullSec);
-          else holding = true;
-        }
-      } else if (atWindow >= v.peekSec) {
+        sawMonster = true;
+        if (fog.fogRatio() >= 0.35) scrub(fog, v);
+        else holding = true;
+      } else if (!sawMonster) {
         n.startTravel((n.current + 1) % config.windows.length); // tidak ada apa-apa: lanjut ke jendela berikutnya
         atWindow = 0;
         sawMonster = false;

@@ -58,6 +58,36 @@ export class Fog {
     }
   }
 
+  // Gosok: hapus sebagian embun sepanjang garis dari titik lama ke titik baru. Jumlah yang hilang sebanding
+  // panjang jalur (kursor diam tidak menghapus), tidak bergantung berapa frame yang dipakai. perPass = bagian
+  // embun yang hilang di garis tengah kuas ketika satu lintasan penuh melewati sel; tepi kuas menghapus lebih sedikit.
+  rub(x0: number, y0: number, x1: number, y1: number, radius: number, perPass: number) {
+    const length = Math.hypot(x1 - x0, y1 - y0);
+    if (length < 1e-4) return;
+    const spacing = radius * 0.5; // jarak antar cap kuas
+    const stamps = Math.max(1, Math.ceil(length / spacing));
+    const step = length / stamps;
+    // Hasil integral kekuatan kuas (1 - d²/r²) sepanjang garis tengah = 4r/3, dibagi spacing.
+    const perStamp = (perPass * (step / spacing)) / (((4 / 3) * radius) / spacing);
+    for (let s = 1; s <= stamps; s++) this.stamp(x0 + ((x1 - x0) * s) / stamps, y0 + ((y1 - y0) * s) / stamps, radius, perStamp);
+  }
+
+  // Satu cap kuas: kurangi embun dengan kekuatan yang menurun ke tepi (1 - d²/r²).
+  private stamp(x: number, y: number, radius: number, amount: number) {
+    const minX = Math.max(0, Math.floor(x - radius));
+    const maxX = Math.min(this.size - 1, Math.ceil(x + radius));
+    const minY = Math.max(0, Math.floor(y - radius));
+    const maxY = Math.min(this.size - 1, Math.ceil(y + radius));
+    for (let cy = minY; cy <= maxY; cy++) {
+      for (let cx = minX; cx <= maxX; cx++) {
+        const d2 = ((cx + 0.5 - x) ** 2 + (cy + 0.5 - y) ** 2) / (radius * radius);
+        if (d2 >= 1) continue;
+        const i = cy * this.size + cx;
+        this.cells[i] = Math.max(0, this.cells[i] - amount * (1 - d2));
+      }
+    }
+  }
+
   // Usap sepanjang garis dari titik lama ke titik baru, supaya gerakan
   // mouse yang cepat tidak meninggalkan lubang di antara frame.
   wipeLine(x0: number, y0: number, x1: number, y1: number, radius: number) {
