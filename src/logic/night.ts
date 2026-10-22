@@ -16,6 +16,7 @@ export class Night {
   travel: Travel | null = null;
   stareStatus: StareStatus = "none";
   staredMonster: Monster | null = null; // monster yang sedang ditatap (untuk tampilan)
+  invincible = false; // hanya untuk debug: monster tidak bisa mengalahkan pemain
   elapsed = 0; // detik sejak malam mulai
   lostBy: Monster | null = null; // monster yang berhasil masuk; null = belum kalah
   private won = false;
@@ -62,7 +63,7 @@ export class Night {
 
     const target = this.updateStare(holdingStare);
     for (const monster of this.monsters) {
-      if (monster.update(dt, monster === target) && monster.window !== null) {
+      if (monster.update(dt, monster === target) && monster.window !== null && !this.invincible) {
         this.lostBy = monster;
         return;
       }
