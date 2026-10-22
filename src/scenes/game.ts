@@ -1,5 +1,6 @@
 // Scene game: menyambungkan input mouse ke logika Night dan menggambar hasilnya.
 import type { KAPLAYCtx } from "kaplay";
+import { playKnock, startHum, stopHum } from "../audio";
 import { config } from "../config";
 import { Night } from "../logic/night";
 import { saveHighestNight } from "../logic/progress";
@@ -14,6 +15,10 @@ export function registerGameScene(k: KAPLAYCtx) {
     let lastCell: { x: number; y: number } | null = null;
     let fps = 60;
     let progressSaved = false;
+    const knockIndex = night.monsters.map(() => -1); // ketukan ke-berapa yang sudah dibunyikan per monster
+
+    startHum();
+    k.onSceneLeave(stopHum);
 
     k.onUpdate(() => {
       const dt = k.dt();
@@ -23,6 +28,7 @@ export function registerGameScene(k: KAPLAYCtx) {
       const overMinimap = isOverMinimap(mouse);
       const holding = k.isMouseDown("left") && !overMinimap; // klik di minimap = pindah, bukan stare
       night.update(dt, holding);
+      playKnocksForMonstersAtGlass();
       if (night.isWon() && !progressSaved) {
         // Simpan saat menang (bukan saat klik) supaya refresh di layar menang tidak menghilangkan progres.
         saveHighestNight(Math.min(nightIndex + 1, config.nights.length - 1));
@@ -80,6 +86,23 @@ export function registerGameScene(k: KAPLAYCtx) {
         k.drawText({ text: nightIndex === config.nights.length - 1 ? "Klik untuk lanjut" : "Klik untuk malam berikutnya", pos: k.vec2(360, 400), anchor: "center", size: 20, color: k.rgb(0, 0, 0) });
       }
     });
+
+    // Ketukan saat monster sampai di kaca (jendela mana pun), lalu berulang selama masih menempel.
+    function playKnocksForMonstersAtGlass() {
+      if (night.isLost() || night.isWon()) return; // jangan bertumpuk dengan jumpscare
+      night.monsters.forEach((m, i) => {
+        const atGlass = m.isActive() && m.position >= config.monster.glassStep;
+        if (!atGlass) {
+          knockIndex[i] = -1;
+          return;
+        }
+        const nth = Math.floor(m.graceElapsed / config.audio.knockEverySec);
+        if (nth !== knockIndex[i]) {
+          playKnock();
+          knockIndex[i] = nth;
+        }
+      });
+    }
 
     function drawDebugText(n: Night, currentFps: number) {
       const fogText = n.fogs.map((f, i) => `${config.windows[i].name} ${(f.fogRatio() * 100).toFixed(0)}%`).join("   ");

@@ -34,6 +34,14 @@ export const config = {
     margin: 14, // jarak dari pojok kanan bawah
   },
 
+  audio: {
+    masterGain: 0.8, // volume keseluruhan (0 sampai 1)
+    humGain: 0.12, // dengung latar selama game
+    knockGain: 0.5, // ketukan saat monster menempel di kaca
+    knockEverySec: 1, // ketukan berulang selama monster masih menempel
+    jumpscareGain: 0.5, // suara jumpscare; keras tapi jangan sampai pecah
+  },
+
   replayMonologueOnRetry: true, // kalah lalu ulang: monolog malam itu diputar lagi (false = langsung main)
 
   nightLengthSec: 300, // jam 00:00 sampai 05:00 -> 1 jam game = 1 menit

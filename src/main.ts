@@ -1,4 +1,5 @@
 import kaplay from "kaplay";
+import { unlockAudio } from "./audio";
 import { config } from "./config";
 import { registerEndScene } from "./scenes/end";
 import { registerGameScene } from "./scenes/game";
@@ -15,6 +16,9 @@ const k = kaplay({
 });
 
 
+
+// Browser baru mengizinkan suara setelah pemain berinteraksi.
+window.addEventListener("pointerdown", unlockAudio);
 
 registerMenuScene(k);
 registerMonologueScene(k);

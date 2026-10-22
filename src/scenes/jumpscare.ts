@@ -1,6 +1,7 @@
 // Jumpscare saat kalah: monster membesar memenuhi layar, lalu layar kalah.
 // Suara jumpscare ditambah di milestone audio.
 import type { KAPLAYCtx } from "kaplay";
+import { playJumpscare } from "../audio";
 import { config } from "../config";
 import { drawMonsterShape } from "../render/monster";
 
@@ -10,6 +11,7 @@ const size = config.canvasSize;
 export function registerJumpscareScene(k: KAPLAYCtx) {
   k.scene("jumpscare", (nightIndex: number, monsterX: number) => {
     let t = 0;
+    playJumpscare();
     const lostScreenAt = cfg.growSec + cfg.holdSec;
 
     k.onUpdate(() => {
