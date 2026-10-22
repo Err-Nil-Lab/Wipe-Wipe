@@ -77,6 +77,14 @@ export class WindowGlass {
     this.mesh.renderOrder = 10; // digambar setelah pemandangan di belakangnya
   }
 
+  // Bebaskan memori GPU saat malam berganti.
+  dispose() {
+    this.mesh.geometry.dispose();
+    this.overlayMaterial.dispose();
+    this.transmissionMaterial.dispose();
+    this.texture.dispose();
+  }
+
   setMode(mode: GlassMode) {
     this.mode = mode;
     this.mesh.material = mode === "overlay" ? this.overlayMaterial : this.transmissionMaterial;

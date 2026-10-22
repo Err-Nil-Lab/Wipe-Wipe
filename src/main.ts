@@ -77,6 +77,7 @@ if (debug) {
   (window as unknown as { __debug: unknown }).__debug = {
     pause: () => (paused = true),
     resume: () => (paused = false),
+    memory: () => ({ ...gfx.renderer.info.memory }),
     step: (dt: number, count = 1) => {
       for (let i = 0; i < count; i++) tick(dt);
     },

@@ -50,6 +50,7 @@ export class MonsterView {
 
   dispose(scene: THREE.Scene) {
     scene.remove(this.model.root);
+    this.model.dispose();
   }
 
   update(dt: number, timeSec: number, monster: Monster, stared: boolean) {

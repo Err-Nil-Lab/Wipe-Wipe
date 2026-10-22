@@ -111,7 +111,7 @@ export class NightSession {
     hideRing();
     this.glasses.forEach((glass) => {
       this.scene.remove(glass.mesh);
-      glass.mesh.geometry.dispose();
+      glass.dispose();
     });
     this.monsterViews.forEach((view) => view.dispose(this.scene));
   }

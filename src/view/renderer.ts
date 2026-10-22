@@ -11,7 +11,14 @@ export function createRenderer(container: HTMLElement) {
   const height = config.view3d.renderHeight;
   const width = Math.round(height * aspect);
 
-  const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
+  let renderer: THREE.WebGLRenderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
+  } catch {
+    container.textContent = "WebGL tidak tersedia di browser ini. Coba Chrome, Edge, atau Firefox terbaru di komputer desktop.";
+    container.style.cssText += "color:#fff;font:20px monospace;text-align:center;padding:24px;";
+    throw new Error("WebGL tidak tersedia");
+  }
   renderer.setPixelRatio(1);
   renderer.setSize(width, height, false);
   renderer.info.autoReset = false; // supaya info.render menghitung seluruh frame, bukan hanya pass terakhir

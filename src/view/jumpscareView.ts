@@ -83,6 +83,7 @@ export class JumpscareView {
 
   dispose() {
     this.scene.remove(this.model.root);
+    this.model.dispose();
     this.glass.mesh.visible = true;
   }
 }

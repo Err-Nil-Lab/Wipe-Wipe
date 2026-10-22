@@ -97,6 +97,15 @@ export class MonsterModel {
     }
   }
 
+  // Bebaskan geometri dan material saat model tidak dipakai lagi.
+  dispose() {
+    this.root.traverse((object) => {
+      if (object instanceof THREE.Mesh) object.geometry.dispose();
+    });
+    this.body.dispose();
+    this.eyeMaterial.dispose();
+  }
+
   // Memudar masuk/keluar. Material dibuat transparan hanya selama belum penuh.
   setFade(fade: number) {
     for (const material of [this.body, this.eyeMaterial]) {
