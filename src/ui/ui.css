@@ -1,23 +1,45 @@
 /* Tampilan HTML di atas kanvas game. */
-#minimap {
-  position: fixed;
-  right: 14px;
-  bottom: 14px;
-  display: flex;
-  gap: 8px;
+body { font-family: ui-monospace, Menlo, Consolas, monospace; color: #fff; }
+
+#ring {
+  position: fixed; left: 0; top: 0; border: 2px solid #fff; border-radius: 50%;
+  pointer-events: none; display: none; box-sizing: border-box;
 }
+#hud {
+  position: fixed; left: 8px; bottom: 8px; color: #ff0; font-size: 13px; line-height: 1.4;
+  white-space: pre; pointer-events: none; text-shadow: 0 0 3px #000;
+}
+#clock {
+  position: fixed; right: 16px; top: 12px; font-size: 28px; letter-spacing: 1px;
+  pointer-events: none; display: none; text-shadow: 0 0 6px #000;
+}
+#flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+
+#minimap { position: fixed; right: 14px; bottom: 14px; display: none; gap: 8px; }
 #minimap button {
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  background: rgba(0, 0, 0, 0.7);
-  border: 2px solid #fff;
-  cursor: pointer;
+  width: 44px; height: 44px; padding: 0; background: rgba(0, 0, 0, 0.7);
+  border: 2px solid #fff; cursor: pointer;
 }
-#minimap button.active::after {
-  content: "";
-  display: block;
-  margin: 6px;
-  height: calc(100% - 12px);
-  background: #fff;
+#minimap button.active::after { content: ""; display: block; margin: 6px; height: calc(100% - 12px); background: #fff; }
+
+/* Layar penuh di atas dunia 3D: menu, monolog, menang, kalah, akhir. */
+#screen { position: fixed; inset: 0; display: none; }
+#screen .content { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+#screen.dim { background: rgba(0, 0, 0, 0.6); }
+#screen.black { background: #000; }
+#screen.white { background: rgba(255, 255, 255, 0.88); color: #000; }
+#screen h1 { font-size: 72px; margin: 0 0 40px; letter-spacing: 4px; }
+#screen h2 { font-size: 56px; margin: 0 0 16px; }
+#screen p { font-size: 18px; margin: 8px 0; opacity: 0.8; }
+#screen button {
+  display: block; width: 320px; margin: 10px auto; padding: 14px; font: inherit; font-size: 24px;
+  color: #fff; background: #000; border: 3px solid #fff; cursor: pointer;
 }
+#screen button:hover { color: #000; background: #fff; }
+#screen.monologue .content { justify-content: space-between; cursor: pointer; }
+#screen.monologue h2 { margin-top: 12vh; }
+#screen .box {
+  box-sizing: border-box; width: min(760px, 92vw); margin-bottom: 6vh; padding: 20px 24px; text-align: left;
+  background: rgba(0, 0, 0, 0.88); border: 3px solid #fff; font-size: 24px; min-height: 130px;
+}
+#screen .hint { display: block; margin-top: 14px; text-align: right; font-size: 14px; opacity: 0.6; }

@@ -18,5 +18,8 @@ export function createMinimap(onSelect: (windowIndex: number) => void) {
     highlight(active: number) {
       boxes.forEach((box, i) => box.classList.toggle("active", i === active));
     },
+    setVisible(visible: boolean) {
+      root.style.display = visible ? "flex" : "none";
+    },
   };
 }

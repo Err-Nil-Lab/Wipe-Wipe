@@ -69,7 +69,8 @@ export const config = {
   jumpscare: {
     growSec: 0.5, // monster membesar sampai memenuhi layar
     holdSec: 0.8, // tahan sebentar sebelum layar kalah muncul
-    shake: 10, // getar layar (piksel)
+    breakSec: 0.12, // monster menggedor kaca sebelum kaca pecah
+    shake: 0.025, // getar kamera (radian)
   },
 
   nights: [

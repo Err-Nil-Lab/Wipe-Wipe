@@ -35,13 +35,25 @@ export class MonsterView {
   private shudder = 0;
   private knockAge = 99;
   private lastKnockIndex = -1;
+  private disabled = false;
 
   constructor(scene: THREE.Scene) {
     scene.add(this.model.root);
     this.model.setFade(0);
   }
 
+  // Dipakai saat jumpscare: model jumpscare menggantikan monster ini.
+  disable() {
+    this.disabled = true;
+    this.model.setFade(0);
+  }
+
+  dispose(scene: THREE.Scene) {
+    scene.remove(this.model.root);
+  }
+
   update(dt: number, timeSec: number, monster: Monster, stared: boolean) {
+    if (this.disabled) return;
     const active = monster.window !== null;
     if (active && (!this.wasActive || monster.window !== this.window)) {
       // Baru muncul (atau pindah jendela): taruh langsung di langkahnya dan muncul dari kabut.
