@@ -15,7 +15,9 @@ export class Night {
   current: number = config.startWindow; // jendela yang sedang dilihat (atau asal saat pindah)
   travel: Travel | null = null;
   stareStatus: StareStatus = "none";
-  lostAtWindow: number | null = null; // jendela tempat monster masuk; null = belum kalah
+  elapsed = 0; // detik sejak malam mulai
+  lostBy: Monster | null = null; // monster yang berhasil masuk; null = belum kalah
+  private won = false;
   private fogFullSec: number;
 
   constructor(nightIndex: number) {
@@ -26,12 +28,25 @@ export class Night {
   }
 
   isLost(): boolean {
-    return this.lostAtWindow !== null;
+    return this.lostBy !== null;
+  }
+
+  isWon(): boolean {
+    return this.won;
+  }
+
+  // Jam game "HH:MM", 00:00 sampai 05:00.
+  clockText(): string {
+    const gameMinutes = Math.min(300, Math.floor((this.elapsed / config.nightLengthSec) * 300));
+    const hh = String(Math.floor(gameMinutes / 60)).padStart(2, "0");
+    const mm = String(gameMinutes % 60).padStart(2, "0");
+    return `${hh}:${mm}`;
   }
 
   // holdingStare = klik kiri ditahan di luar minimap.
   update(dt: number, holdingStare: boolean) {
-    if (this.isLost()) return;
+    if (this.isLost() || this.won) return;
+    this.elapsed += dt;
 
     // Semua jendela terus berembun, juga yang tidak sedang dilihat.
     for (const fog of this.fogs) fog.grow(dt, this.fogFullSec);
@@ -47,11 +62,14 @@ export class Night {
     const target = this.updateStare(holdingStare);
     for (const monster of this.monsters) {
       if (monster.update(dt, monster === target) && monster.window !== null) {
-        this.lostAtWindow = monster.window;
+        this.lostBy = monster;
         return;
       }
       if (!monster.isActive() && monster.spawnIn <= 0) this.spawnInFreeWindow(monster);
     }
+
+    // Kalah dicek lebih dulu: monster yang masuk di detik terakhir tetap mengalahkan pemain.
+    if (this.elapsed >= config.nightLengthSec) this.won = true;
   }
 
   // Menentukan monster mana yang sedang ditatap (kalau ada) dan mengisi stareStatus.

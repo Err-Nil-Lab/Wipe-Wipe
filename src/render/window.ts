@@ -3,25 +3,17 @@ import type { KAPLAYCtx } from "kaplay";
 import { config } from "../config";
 import type { Fog } from "../logic/fog";
 import type { Monster } from "../logic/monster";
+import { drawMonsterShape } from "./monster";
 
 const size = config.canvasSize;
 const cellPx = size / config.fog.gridSize;
 
-// Siluet placeholder: makin dekat makin besar dan makin turun (perspektif 2D).
+// Makin dekat makin besar dan makin turun (perspektif 2D).
 function drawMonster(k: KAPLAYCtx, monster: Monster, offsetX: number) {
   const step = monster.step();
   const height = 80 + (step - 1) * 120;
-  const width = height * 0.45;
   const feetY = 400 + step * 48;
-  const centerX = offsetX + size / 2 + monster.xOffset * 200;
-  const black = k.rgb(0, 0, 0);
-
-  k.drawRect({ pos: k.vec2(centerX - width / 2, feetY - height * 0.65), width, height: height * 0.65, color: black });
-  const headY = feetY - height * 0.82;
-  k.drawCircle({ pos: k.vec2(centerX, headY), radius: height * 0.17, color: black });
-  for (const side of [-1, 1]) {
-    k.drawCircle({ pos: k.vec2(centerX + side * height * 0.06, headY), radius: height * 0.025, color: k.rgb(255, 255, 255) });
-  }
+  drawMonsterShape(k, offsetX + size / 2 + monster.xOffset * 200, feetY, height);
 }
 
 export function drawWindow(k: KAPLAYCtx, fog: Fog, windowIndex: number, offsetX: number, monster: Monster | null) {

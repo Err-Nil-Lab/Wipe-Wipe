@@ -34,6 +34,14 @@ export const config = {
     margin: 14, // jarak dari pojok kanan bawah
   },
 
+  nightLengthSec: 300, // jam 00:00 sampai 05:00 -> 1 jam game = 1 menit
+
+  jumpscare: {
+    growSec: 0.5, // monster membesar sampai memenuhi layar
+    holdSec: 0.8, // tahan sebentar sebelum layar kalah muncul
+    shake: 10, // getar layar (piksel)
+  },
+
   nights: [
     { monsters: 1, fogFullSec: 25 },
     { monsters: 2, fogFullSec: 25 },
