@@ -32,6 +32,10 @@ export const config = {
     fov: 60, // sudut pandang vertikal kamera (derajat)
     glassSize: 1.2, // sisi kaca persegi
     windowCenterY: 1.6, // tinggi tengah jendela
+    eyeHeight: 1.6, // tinggi mata kamera
+    stationDistance: 1.3, // jarak kamera dari kaca saat berdiri di depan jendela
+    travelBob: 0.035, // goyang naik-turun kepala saat berjalan pindah jendela (meter)
+    travelRoll: 0.012, // miring kepala saat berjalan (radian)
     post: {
       levels: 14, // jumlah tingkat abu-abu setelah kuantisasi (makin kecil makin kasar)
       grain: 0.05, // kekuatan butiran film

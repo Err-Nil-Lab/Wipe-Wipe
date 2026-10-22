@@ -1,0 +1,23 @@
+/* Tampilan HTML di atas kanvas game. */
+#minimap {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  display: flex;
+  gap: 8px;
+}
+#minimap button {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid #fff;
+  cursor: pointer;
+}
+#minimap button.active::after {
+  content: "";
+  display: block;
+  margin: 6px;
+  height: calc(100% - 12px);
+  background: #fff;
+}

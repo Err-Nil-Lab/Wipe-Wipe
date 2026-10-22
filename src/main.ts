@@ -1,59 +1,77 @@
-// SPIKE 3D-0: ruangan + satu jendela berembun yang bisa diusap dengan kursor.
-// Tombol: T ganti jenis kaca (overlay/transmisi), R buramkan, C bersihkan. URL ?grid=64 ganti ukuran grid.
+// Game 3D: menyambungkan input (kursor, minimap) ke logika Night dan menggambar dunia.
+import "./ui/ui.css";
 import * as THREE from "three";
 import { config } from "./config";
-import { Fog } from "./logic/fog";
+import { Night } from "./logic/night";
+import { createMinimap } from "./ui/minimap";
+import { createCameraRig } from "./view/cameraRig";
+import { buildEnvironment } from "./view/environment";
+import { buildHouse } from "./view/house";
+import { glassPosition, windowYaw } from "./view/layout";
 import { createRenderer } from "./view/renderer";
-import { buildSpikeScene, glassPosition } from "./view/spikeScene";
 import { WindowGlass } from "./view/windowGlass";
 
-const gridSize = Number(new URLSearchParams(location.search).get("grid")) || config.fog.gridSize;
-const fogFullSec = config.nights[0].fogFullSec;
-
 const gfx = createRenderer(document.getElementById("app")!);
-const { scene, camera, lantern } = buildSpikeScene();
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(config.view3d.fov, 16 / 9, 0.05, 80);
+const rig = createCameraRig(camera);
 
-const fog = new Fog(gridSize, 1);
-const glass = new WindowGlass(fog, config.view3d.glassSize);
-glass.mesh.position.copy(glassPosition);
-scene.add(glass.mesh);
+buildEnvironment(scene);
+const { lantern } = buildHouse(scene);
+
+const night = new Night(0);
+// SEMENTARA (3D-1): monster belum punya tampilan 3D, jadi jangan dimunculkan.
+night.monsters.forEach((m) => (m.spawnIn = Infinity));
+
+// Satu kaca per jendela; semuanya diperbarui tiap frame, hanya yang di depan kamera yang bisa diusap.
+const glasses = night.fogs.map((fog, i) => {
+  const glass = new WindowGlass(fog, config.view3d.glassSize);
+  glass.mesh.position.copy(glassPosition(i));
+  glass.mesh.rotation.y = windowYaw[i];
+  scene.add(glass.mesh);
+  return glass;
+});
+
+const minimap = createMinimap((i) => night.startTravel(i));
 
 const ring = document.getElementById("ring")!;
 const hud = document.getElementById("hud")!;
 const raycaster = new THREE.Raycaster();
 let pointer: { x: number; y: number } | null = null; // posisi kursor dalam piksel layar
+let overUi = false; // kursor di atas minimap: wipe mati
 let lastCell: { x: number; y: number } | null = null;
 
-window.addEventListener("pointermove", (e) => (pointer = { x: e.clientX, y: e.clientY }));
-document.addEventListener("pointerleave", () => (pointer = null));
-window.addEventListener("keydown", (e) => {
-  if (e.key === "t") glass.setMode(glass.mode === "overlay" ? "transmission" : "overlay");
-  if (e.key === "r") fog.fill();
-  if (e.key === "c") fog.clear();
+window.addEventListener("pointermove", (e) => {
+  pointer = { x: e.clientX, y: e.clientY };
+  overUi = (e.target as HTMLElement).closest("#minimap") !== null;
 });
+document.addEventListener("pointerleave", () => (pointer = null));
 
-// Kursor -> sel di kaca -> usap. Cincin menunjukkan ukuran kuas di layar.
+// Kursor -> sel di kaca aktif -> usap. Cincin menunjukkan ukuran kuas di layar.
 function wipeUnderPointer() {
+  const fog = night.activeFog(); // null saat pindah jendela
   const rect = gfx.canvas.getBoundingClientRect();
   const inside = pointer && pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom;
-  const hit = inside
-    ? (raycaster.setFromCamera(new THREE.Vector2(((pointer!.x - rect.left) / rect.width) * 2 - 1, -(((pointer!.y - rect.top) / rect.height) * 2 - 1)), camera),
-      glass.pick(raycaster))
-    : null;
+  let hit: ReturnType<WindowGlass["pick"]> = null;
+  if (fog && inside && !overUi) {
+    const ndc = new THREE.Vector2(((pointer!.x - rect.left) / rect.width) * 2 - 1, -(((pointer!.y - rect.top) / rect.height) * 2 - 1));
+    raycaster.setFromCamera(ndc, camera);
+    hit = glasses[night.current].pick(raycaster);
+  }
 
-  if (!hit) {
-    lastCell = null;
+  if (!fog || !hit) {
+    lastCell = null; // supaya tidak ada garis usapan melompat saat wipe aktif lagi
     ring.style.display = "none";
     return;
   }
 
-  const radiusCells = config.fog.brushRadius * fog.size;
   const from = lastCell ?? hit;
-  fog.wipeLine(from.x, from.y, hit.x, hit.y, radiusCells);
+  fog.wipeLine(from.x, from.y, hit.x, hit.y, config.fog.brushRadius * fog.size);
   lastCell = hit;
 
-  // Radius cincin: proyeksikan titik di kanan kursor sejauh radius kuas (dalam meter).
-  const edge = hit.point.clone().add(new THREE.Vector3(config.fog.brushRadius * config.view3d.glassSize, 0, 0)).project(camera);
+  // Radius cincin: proyeksikan titik di samping kursor sejauh radius kuas (meter) ke layar.
+  const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
+  const edge = hit.point.clone().addScaledVector(right, config.fog.brushRadius * config.view3d.glassSize).project(camera);
   const center = hit.point.clone().project(camera);
   const radiusPx = Math.abs(edge.x - center.x) * 0.5 * rect.width;
   ring.style.display = "block";
@@ -70,9 +88,12 @@ function frame(now: number) {
   last = now;
   fps += (1 / Math.max(dt, 0.0001) - fps) * 0.05;
 
-  fog.grow(dt, fogFullSec);
+  night.update(dt, false);
+  rig.update(night, now / 1000);
+  camera.updateMatrixWorld();
   wipeUnderPointer();
-  glass.update();
+  glasses.forEach((g) => g.update());
+  minimap.highlight(night.travel ? night.travel.to : night.current);
   lantern.intensity = 12 + Math.sin(now / 130) * 0.6 + Math.sin(now / 47) * 0.4; // kedip pelan
 
   gfx.render(scene, camera, now / 1000);
@@ -81,14 +102,12 @@ function frame(now: number) {
   if (hudTimer > 0.4) {
     hudTimer = 0;
     const info = gfx.renderer.info.render;
-    hud.textContent =
-      `FPS ${fps.toFixed(0)}   embun ${(fog.fogRatio() * 100).toFixed(0)}%   grid ${fog.size}x${fog.size}   kaca: ${glass.mode}\n` +
-      `draw call ${info.calls}   segitiga ${info.triangles}\n` +
-      `T = ganti kaca, R = buramkan, C = bersihkan`;
+    const fogText = night.fogs.map((f, i) => `${config.windows[i].name} ${(f.fogRatio() * 100).toFixed(0)}%`).join("  ");
+    hud.textContent = `FPS ${fps.toFixed(0)}   embun: ${fogText}\ndraw call ${info.calls}   segitiga ${info.triangles}`;
   }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 
 // Untuk tes otomatis.
-(window as unknown as { __spike: unknown }).__spike = { fog, glass };
+(window as unknown as { __game: unknown }).__game = { night, camera };
