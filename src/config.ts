@@ -1,10 +1,8 @@
 // Semua angka gameplay ada di sini. Ubah, simpan, Vite reload otomatis.
 export const config = {
-  canvasSize: 720,
-
   fog: {
-    gridSize: 32, // sel per sisi kaca (32 -> 32x32)
-    brushRadiusCells: 2.5, // radius kuas dalam sel; setel sampai usap penuh terasa ~2 dtk
+    gridSize: 32, // sel per sisi kaca (32 -> 32x32). Boleh dinaikkan kalau embun terlihat kasar.
+    brushRadius: 0.08, // radius kuas sebagai pecahan lebar kaca (0.08 = 8%); setel sampai usap penuh terasa ~2 dtk
     startFog: 0, // embun awal tiap jendela saat malam mulai (0 jernih, 1 buram)
     stareMaxFog: 0.5, // stare hanya jalan kalau rata-rata embun kaca di bawah angka ini
   },
@@ -28,10 +26,17 @@ export const config = {
   ],
   startWindow: 1, // malam dimulai di jendela ini (indeks di windows)
 
-  minimap: {
-    boxSize: 44,
-    gap: 8,
-    margin: 14, // jarak dari pojok kanan bawah
+  // Tampilan 3D. Satuan jarak = meter.
+  view3d: {
+    renderHeight: 360, // tinggi render dalam piksel; lebar mengikuti 16:9. Kecil = tampilan PS1 + ringan.
+    fov: 60, // sudut pandang vertikal kamera (derajat)
+    glassSize: 1.2, // sisi kaca persegi
+    windowCenterY: 1.6, // tinggi tengah jendela
+    post: {
+      levels: 14, // jumlah tingkat abu-abu setelah kuantisasi (makin kecil makin kasar)
+      grain: 0.05, // kekuatan butiran film
+      vignette: 0.55, // gelap di tepi layar
+    },
   },
 
   audio: {

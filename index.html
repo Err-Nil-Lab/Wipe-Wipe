@@ -5,9 +5,22 @@
     <title>Wipe Wipe</title>
     <style>
       html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+      #app { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+      #app canvas { image-rendering: pixelated; cursor: none; }
+      #ring {
+        position: fixed; left: 0; top: 0; border: 2px solid #fff; border-radius: 50%;
+        pointer-events: none; display: none; box-sizing: border-box;
+      }
+      #hud {
+        position: fixed; left: 8px; bottom: 8px; color: #ff0; font: 13px/1.4 monospace;
+        white-space: pre; pointer-events: none; text-shadow: 0 0 3px #000;
+      }
     </style>
   </head>
   <body>
+    <div id="app"></div>
+    <div id="ring"></div>
+    <div id="hud"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
