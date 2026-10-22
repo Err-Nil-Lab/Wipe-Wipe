@@ -76,7 +76,8 @@ export class NightSession {
     const pointer = input.pointer;
     const rect = canvas.getBoundingClientRect();
     const inside = pointer && pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom;
-    const allowed = this.running && fog && inside && !input.overUi && !input.holding && !night.isLost() && !night.isWon();
+    const holdBlocksWipe = !config.fog.autoStare && input.holding; // stare manual mematikan wipe; stare otomatis tidak
+    const allowed = this.running && fog && inside && !input.overUi && !holdBlocksWipe && !night.isLost() && !night.isWon();
 
     let hit: ReturnType<WindowGlass["pick"]> = null;
     if (allowed) {

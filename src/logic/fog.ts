@@ -3,10 +3,36 @@
 export class Fog {
   readonly size: number;
   readonly cells: Float32Array;
+  private readonly scratch: Float32Array;
 
   constructor(size: number, startFog = 1) {
     this.size = size;
     this.cells = new Float32Array(size * size).fill(startFog);
+    this.scratch = new Float32Array(size * size);
+  }
+
+  // Embun merayap balik: sel yang lebih bersih dari rata-rata tetangganya ditarik ke arah rata-rata itu.
+  // Lubang kecil dikelilingi embun jadi cepat menutup; di tengah area bersih yang luas tidak ada yang menarik.
+  creep(dt: number, rate: number) {
+    if (rate <= 0) return;
+    const n = this.size;
+    const c = this.cells;
+    const pull = Math.min(1, rate * dt);
+    this.scratch.set(c);
+    for (let y = 0; y < n; y++) {
+      for (let x = 0; x < n; x++) {
+        let sum = 0;
+        let count = 0;
+        if (x > 0) { sum += c[y * n + x - 1]; count++; }
+        if (x < n - 1) { sum += c[y * n + x + 1]; count++; }
+        if (y > 0) { sum += c[(y - 1) * n + x]; count++; }
+        if (y < n - 1) { sum += c[(y + 1) * n + x]; count++; }
+        const average = sum / count;
+        const i = y * n + x;
+        if (average > c[i]) this.scratch[i] = c[i] + (average - c[i]) * pull;
+      }
+    }
+    c.set(this.scratch);
   }
 
   // Embun menebal merata di semua sel.

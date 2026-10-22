@@ -16,6 +16,7 @@ export class Night {
   travel: Travel | null = null;
   stareStatus: StareStatus = "none";
   staredMonster: Monster | null = null; // monster yang sedang ditatap (untuk tampilan)
+  private autoStaring = false; // keadaan stare otomatis (untuk histeresis)
   invincible = false; // hanya untuk debug: monster tidak bisa mengalahkan pemain
   elapsed = 0; // detik sejak malam mulai
   lostBy: Monster | null = null; // monster yang berhasil masuk; null = belum kalah
@@ -51,7 +52,10 @@ export class Night {
     this.elapsed += dt;
 
     // Semua jendela terus berembun, juga yang tidak sedang dilihat.
-    for (const fog of this.fogs) fog.grow(dt, this.fogFullSec);
+    for (const fog of this.fogs) {
+      fog.grow(dt, this.fogFullSec);
+      fog.creep(dt, config.fog.creepPerSec);
+    }
 
     if (this.travel) {
       this.travel.elapsed += dt;
@@ -78,12 +82,30 @@ export class Night {
   private updateStare(holdingStare: boolean): Monster | null {
     this.stareStatus = "none";
     this.staredMonster = null;
-    if (!holdingStare || this.travel) return null;
-    if (this.fogs[this.current].fogRatio() >= config.fog.stareMaxFog) {
-      this.stareStatus = "foggy";
+    if (this.travel) {
+      this.autoStaring = false;
       return null;
     }
     const target = this.monsterAt(this.current);
+    const fogRatio = this.fogs[this.current].fogRatio();
+
+    if (config.fog.autoStare) {
+      // Otomatis: menyala di bawah autoStareOnFog, putus di stareMaxFog (histeresis supaya tidak berkedip).
+      if (!target) {
+        this.autoStaring = false;
+        return null;
+      }
+      this.autoStaring = fogRatio < (this.autoStaring ? config.fog.stareMaxFog : config.fog.autoStareOnFog);
+      this.stareStatus = this.autoStaring ? "staring" : "foggy";
+      this.staredMonster = this.autoStaring ? target : null;
+      return this.staredMonster;
+    }
+
+    if (!holdingStare) return null;
+    if (fogRatio >= config.fog.stareMaxFog) {
+      this.stareStatus = "foggy";
+      return null;
+    }
     if (target) this.stareStatus = "staring";
     this.staredMonster = target;
     return target;

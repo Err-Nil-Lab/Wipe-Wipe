@@ -1,6 +1,7 @@
 // Kaca jendela: menampilkan Fog (grid embun dari logic/) sebagai tekstur, dan mengubah
 // posisi kursor di kaca menjadi koordinat sel untuk wipe. Tidak berisi aturan game.
 import * as THREE from "three";
+import { config } from "../config";
 import type { Fog } from "../logic/fog";
 
 export type GlassMode = "overlay" | "transmission";
@@ -16,6 +17,8 @@ const overlayVertex = /* glsl */ `
 // Embun sebagai lapisan susu abu-abu. Noise membuat tepi usapan terlihat organik, bukan kotak-kotak.
 const overlayFragment = /* glsl */ `
   uniform sampler2D uFog;
+  uniform float uBlurRadius;
+  uniform float uBlurMix;
   varying vec2 vUv;
 
   float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -27,7 +30,16 @@ const overlayFragment = /* glsl */ `
 
   void main() {
     vec2 uv = vec2(vUv.x, 1.0 - vUv.y); // baris 0 grid = atas kaca
-    float fog = texture2D(uFog, uv).r;
+    // Kejernihan dari area sekitar: lubang kecil dikelilingi embun tetap berkabut samar, dan baru jernih
+    // kalau sebagian besar kaca di sekitarnya bersih. 16 titik tersebar di cakram (spiral sudut emas).
+    float local = texture2D(uFog, uv).r;
+    float area = 0.0;
+    for (int i = 0; i < 16; i++) {
+      float r = sqrt((float(i) + 0.5) / 16.0);
+      float a = float(i) * 2.39996;
+      area += texture2D(uFog, clamp(uv + vec2(cos(a), sin(a)) * r * uBlurRadius, 0.0, 1.0)).r;
+    }
+    float fog = mix(local, area / 16.0, uBlurMix);
     float n = noise(uv * vec2(18.0, 26.0)) * 0.6 + noise(uv * vec2(60.0, 90.0)) * 0.4;
     float body = smoothstep(0.30, 0.60, fog + (n - 0.5) * 0.45); // embun tebal: hampir menutup
     float haze = fog * 0.45;                                       // embun tipis: hanya mengabur
@@ -57,7 +69,7 @@ export class WindowGlass {
     this.overlayMaterial = new THREE.ShaderMaterial({
       vertexShader: overlayVertex,
       fragmentShader: overlayFragment,
-      uniforms: { uFog: { value: this.texture } },
+      uniforms: { uFog: { value: this.texture }, uBlurRadius: { value: config.fog.blurRadius }, uBlurMix: { value: config.fog.blurMix } },
       transparent: true,
       depthWrite: false,
     });

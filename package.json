@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
-    "sim": "node tools/logic-timing.mjs && node tools/logic-night.mjs",
+    "sim": "node tools/logic-timing.mjs && node tools/logic-night.mjs && node tools/logic-fog.mjs",
     "balance": "node tools/balance-bot.mjs"
   },
   "devDependencies": {

@@ -21,6 +21,15 @@ npm run balance    # perkiraan kasar keseimbangan dengan bot (lihat tools/balanc
 - **Klik kotak di minimap** (kanan bawah): pindah jendela. Waktu pindah beda tiap jendela.
 - **R** di layar kalah: ulang malam.
 
+## Embun
+- **Blur-fill:** kejernihan dihitung dari area sekitar (`config.fog.blurRadius`, `blurMix`), jadi satu usapan hanya
+  memberi strip keruh; kaca baru jelas kalau sebagian besar sudah bersih.
+- **Merayap balik:** embun menutup lubang dari tepinya (`config.fog.creepPerSec`). Lubang kecil cepat menutup,
+  area bersih yang luas bertahan. Isi 0 untuk mematikan.
+- **Stare otomatis (opsional):** `config.fog.autoStare: true` membuat stare menyala sendiri saat embun rata-rata
+  < `autoStareOnFog` dan ada monster di jendela yang dilihat; wipe tetap jalan selama menatap. Bawaan `false`
+  (klik tahan).
+
 ## Tuning
 Semua angka gameplay ada di satu file: `src/config.ts` (kecepatan embun, monster, waktu pindah, durasi malam,
 jumpscare, volume, jarak/kabut/kamera 3D). Ubah lalu simpan; Vite memuat ulang otomatis.

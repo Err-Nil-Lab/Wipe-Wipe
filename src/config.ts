@@ -5,6 +5,17 @@ export const config = {
     brushRadius: 0.08, // radius kuas sebagai pecahan lebar kaca (0.08 = 8%); setel sampai usap penuh terasa ~2 dtk
     startFog: 0, // embun awal tiap jendela saat malam mulai (0 jernih, 1 buram)
     stareMaxFog: 0.5, // stare hanya jalan kalau rata-rata embun kaca di bawah angka ini
+    // Embun merayap balik ke area bersih dari tepinya: lubang kecil (intip) cepat menutup, area luas bertahan.
+    // 0 = mati. Makin besar makin cepat; dengan 1 menatap manual dari kaca (5 dtk) butuh kaca hampir bersih penuh.
+    creepPerSec: 1,
+    // Kejernihan tampilan dihitung dari rata-rata area sekitar, jadi lubang kecil tetap berkabut samar
+    // dan baru jernih kalau sebagian besar kaca bersih.
+    blurRadius: 0.22, // radius area rata-rata, pecahan lebar kaca
+    blurMix: 0.75, // 0 = per sel (lubang kecil langsung jernih), 1 = sepenuhnya dari rata-rata area
+    // Stare otomatis: aktif sendiri saat ada monster di jendela yang dilihat dan rata-rata embun < autoStareOnFog,
+    // putus kalau embun >= stareMaxFog. Tombol klik tahan tidak dipakai, dan wipe tetap jalan selama menatap.
+    autoStare: false,
+    autoStareOnFog: 0.35,
   },
 
   monster: {
